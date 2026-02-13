@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Be My Valentine ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', cursive;
+            background: linear-gradient(135deg, #ff6b9d, #c44569, #ff1744);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        canvas {
+            position: fixed; top: 0; left: 0; z-index: 1;
+        }
+        .content {
+            z-index: 10; text-align: center; color: white; text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            font-size: 3em; margin-bottom: 20px; animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .btn {
+            background: #ff4081; color: white; border: none;
+            padding: 15px 30px; font-size: 1.5em; border-radius: 50px;
+            cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin: 10px;
+        }
+        .btn:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+        .btn.no { animation: shake 0.5s infinite; position: relative; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .countdown {
+            margin-top: 30px; font-size: 1.2em;
+        }
+        .hidden { display: none !important; }
+        #confetti { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 20; }
+        
+        /* Flip Book Popup Styles */
+        .flipbook-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .flipbook-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .flipbook-container {
+            background: #f8f6f1;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+        .flipbook-overlay.active .flipbook-container {
+            transform: scale(1);
+        }
+        .flipbook-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        .flipbook-close {
+            background: #ff1744;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #flipbook-shine {
+            font-size: 48px;
+            font-weight: bold;
+            color: rgba(255, 0, 102, 0.3);
+            background: linear-gradient(90deg, #222 0%, #fff 50%, #222 100%) 0 0 no-repeat;
+            background-size: 120px;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: shine 3s infinite;
+            text-shadow: 0 0px 0px rgba(233, 85, 189, 0.419);
+            margin: 0;
+        }
+        @keyframes shine {
+            0%, 10% { background-position: -800px; }
+            20% { background-position: top left; }
+            90% { background-position: top right; }
+            100% { background-position: 800px; }
+        }
+        .flipbook-gallery {
+            --d: 10s;
+            display: grid;
+            place-items: center;
+            width: 220px;
+            margin: 0 auto;
+        }
+        .flipbook-gallery > img {
+            grid-area: 1/1;
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border: 10px solid #f2f2f2;
+            box-shadow: 0 0 4px #0007;
+            z-index: 2;
+            animation: slide var(--d) infinite, z-order var(--d) infinite steps(1);
+        }
+        .flipbook-gallery img:last-child {
+            animation-name: slide, z-order-last;
+        }
+        .flipbook-gallery > img:nth-child(1) { animation-delay: calc(0*var(--d)); --r: 16deg; }
+        .flipbook-gallery > img:nth-child(2) { animation-delay: calc(-0.2*var(--d)); --r: -1deg; }
+        .flipbook-gallery > img:nth-child(3) { animation-delay: calc(-0.4*var(--d)); --r: -19deg; }
+        .flipbook-gallery > img:nth-child(4) { animation-delay: calc(-0.6*var(--d)); --r: 6deg; }
+        .flipbook-gallery > img:nth-child(5) { animation-delay: calc(-0.8*var(--d)); --r: -8deg; }
+        @keyframes slide {
+            10% { transform: translateX(120%) rotate(var(--r)); }
+            0%, 100%, 20% { transform: translateX(0%) rotate(var(--r)); }
+        }
+        @keyframes z-order {
+            10%, 20% { z-index: 1; }
+            80% { z-index: 2; }
+        }
+        @keyframes z-order-last {
+            10%, 20% { z-index: 1; }
+            90% { z-index: 2; }
+        }
+
+        /* Second Page - Romantic Background */
+        .second-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f0e6f6, #e8d5f8, #d4c4fb);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s ease;
+        }
+        .second-page.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Closed Envelope (Decorative) */
+        .envelope {
+            position: relative;
+            width: 280px;
+            height: 180px;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+            margin: 40px auto;
+            background-color: #d9534f;
+            box-shadow: 0 8px 30px rgba(217, 83, 79, 0.4);
+        }
+        .front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+        }
+        .flap {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 140px solid transparent;
+            border-right: 140px solid transparent;
+            border-bottom: 82px solid transparent;
+            border-top: 98px solid #d9534f;
+            z-index: 5;
+        }
+        .pocket {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            border-left: 140px solid #f5a3a2;
+            border-right: 140px solid #f5a3a2;
+            border-bottom: 90px solid #ff6f61;
+            border-top: 90px solid transparent;
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        /* Letter Popup Styles */
+        .letter-popup {
+            background: linear-gradient(145deg, #fff, #f8f1f1);
+            width: 90%;
+            max-width: 450px;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transform: scale(0.7) translateY(50px);
+            opacity: 0;
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            font-family: 'Dancing Script', cursive;
+            overflow: hidden;
+            margin: 20px;
+        }
+        .letter-popup.active {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        .letter-popup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b9d, #c44569, #ff1744);
+            border-radius: 20px 20px 0 0;
+        }
+        .letter-title {
+            text-align: center;
+            font-size: 2.2em;
+            color: #d9534f;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        .letter-content {
+            font-size: 1.3em;
+            color: #333;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .letter-sign {
+            font-size: 1.5em;
+            color: #d9534f;
+            font-weight: 700;
+            text-align: right;
+            margin-top: 20px;
+        }
+        .letter-popup button {
+            background: #d9534f;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(217, 83, 79, 0.4);
+            font-family: Arial, sans-serif;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .letter-popup button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(217, 83, 79, 0.6);
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2em; }
+            .btn { font-size: 1.2em; padding: 12px 24px; }
+            #flipbook-shine { font-size: 32px; }
+            .flipbook-gallery { width: 150px; }
+            .flipbook-container { padding: 20px; margin: 20px; }
+            .envelope { width: 240px; height: 154px; }
+            .letter-popup { padding: 30px 20px; margin: 20px; }
+            .letter-title { font-size: 1.8em; }
+            .letter-content { font-size: 1.1em; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="hearts"></canvas>
+    <div class="content" id="mainContent">
+        <h1>Will You Be My Soulmate ❤️</h1>
+        <button class="btn" id="yesBtn">Yes 💕</button>
+        <button class="btn no" id="noBtn">No 😢</button>
+        <button class="btn" id="galleryBtn">View Love Gallery 📸</button>
+        <div class="countdown" id="countdown"></div>
+    </div>
+    <canvas id="confetti"></canvas>
+
+    <!-- Flip Book Popup -->
+    <div class="flipbook-overlay" id="flipbookOverlay">
+        <div class="flipbook-container">
+            <div class="flipbook-header">
+                <h2 id="flipbook-shine">Happy Valentine's Day💞</h2>
+                <button class="flipbook-close" id="flipbookClose">&times;</button>
+            </div>
+            <div class="flipbook-gallery">
+                <img src="./photo1.jpeg">
+                <img src="./photo2.jpeg">
+                <img src="./photo3.jpeg">
+                <img src="./photo4.jpeg">
+                <img src="./photo5.jpeg">
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Page with Closed Envelope + Letter Popup -->
+    <div class="second-page" id="secondPage">
+        <!-- Closed Envelope (Decorative only) -->
+        <div class="envelope" id="envelope">
+            <div class="front">
+                <div class="flap"></div>
+                <div class="pocket"></div>
+            </div>
+        </div>
+        
+        <!-- Letter Popup -->
+        <div class="letter-popup" id="letterPopup">
+            <div class="letter-title">My Dearest Love 💕</div>
+            <div class="letter-content">
+                From the moment I met you, my heart knew you were the one. 
+                Every day with you feels like a beautiful dream. 
+                You make my world brighter and my soul complete.
+            </div>
+            <div class="letter-sign">Forever Yours ❤️</div>
+            <button id="continueBtn">Continue Magic ✨</button>
+        </div>
+    </div>
+
+    <script>
+        // Animated Hearts Canvas
+        const canvas = document.getElementById('hearts');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const hearts = [];
+        for (let i = 0; i < 50; i++) {
+            hearts.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 20 + 10,
+                speedY: Math.random() * 3 + 1,
+                opacity: Math.random() * 0.5 + 0.5
+            });
+        }
+
+        function animateHearts() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hearts.forEach(heart => {
+                ctx.save();
+                ctx.globalAlpha = heart.opacity;
+                ctx.font = `${heart.size}px Arial`;
+                ctx.fillText('❤️', heart.x, heart.y);
+                ctx.restore();
+                heart.y += heart.speedY;
+                if (heart.y > canvas.height) heart.y = 0;
+            });
+            requestAnimationFrame(animateHearts);
+        }
+        animateHearts();
+
+        // Countdown to Valentine's Day 2026
+        function updateCountdown() {
+            const now = new Date();
+            const valentine = new Date('2026-02-14T00:00:00');
+            const diff = valentine - now;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            document.getElementById('countdown').innerHTML = `Valentine's Day in ${days} days! ⏳`;
+        }
+        updateCountdown();
+        setInterval(updateCountdown, 86400000);
+
+        // Elements
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+        const galleryBtn = document.getElementById('galleryBtn');
+        const flipbookOverlay = document.getElementById('flipbookOverlay');
+        const flipbookClose = document.getElementById('flipbookClose');
+        const secondPage = document.getElementById('secondPage');
+        const letterPopup = document.getElementById('letterPopup');
+        const mainContent = document.getElementById('mainContent');
+        const continueBtn = document.getElementById('continueBtn');
+
+        noBtn.addEventListener('click', () => {
+            const rect = noBtn.getBoundingClientRect();
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = (Math.random() * (window.innerWidth - 200) + rect.left) + 'px';
+            noBtn.style.top = (Math.random() * (window.innerHeight - 100) + rect.top) + 'px';
+        });
+
+        // Yes Button - Shows Second Page with Letter Popup
+        yesBtn.addEventListener('click', () => {
+            mainContent.classList.add('hidden');
+            noBtn.style.display = 'none';
+            setTimeout(() => {
+                secondPage.classList.add('active');
+                setTimeout(() => {
+                    letterPopup.classList.add('active');
+                }, 200);
+            }, 500);
+            confetti();
+        });
+
+        // Continue Magic Button - Perfect alignment back to first page
+        continueBtn.addEventListener('click', () => {
+            // Hide letter popup first
+            letterPopup.classList.remove('active');
+            // Hide second page
+            setTimeout(() => {
+                secondPage.classList.remove('active');
+                // PERFECTLY restore first page alignment
+                mainContent.classList.remove('hidden');
+                noBtn.style.display = 'inline-block';
+                noBtn.style.position = 'relative';
+                noBtn.style.left = 'auto';
+                noBtn.style.top = 'auto';
+                noBtn.style.transform = 'none';
+                // Ensure body flex centering works
+                document.body.style.display = 'flex';
+                document.body.style.justifyContent = 'center';
+                document.body.style.alignItems = 'center';
+            }, 600);
+        });
+
+        // Flip Book Popup
+        galleryBtn.addEventListener('click', () => {
+            flipbookOverlay.classList.add('active');
+        });
+
+        flipbookClose.addEventListener('click', () => {
+            flipbookOverlay.classList.remove('active');
+        });
+
+        flipbookOverlay.addEventListener('click', (e) => {
+            if (e.target === flipbookOverlay) {
+                flipbookOverlay.classList.remove('active');
+            }
+        });
+
+        // Simple Confetti
+        function confetti() {
+            const confettiCanvas = document.getElementById('confetti');
+            const confettiCtx = confettiCanvas.getContext('2d');
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    confettiCtx.fillStyle = `hsl(${Math.random()*360}, 100%, 50%)`;
+                    confettiCtx.fillRect(Math.random()*confettiCanvas.width, Math.random()*confettiCanvas.height, 10, 10);
+                }, i * 50);
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
